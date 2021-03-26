@@ -1,0 +1,169 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Snake Game</title>
+</head>
+
+<body>
+    <div id="score-table">
+        <div>Score</div>
+        <div id="score">0</div>
+    </div>
+    <canvas id="board" width="800" height="800"></canvas>
+</body>
+<script>
+    const SNAKE_FILL_STYLE = 'lightblue'
+    const SNAKE_STROKE_STYLE = 'lightgreen'
+
+    const board = document.getElementById('board')
+    const board_ctx = board.getContext('2d')
+
+    let dx = 10
+    let dy = 0
+
+    let foodX = 0
+    let foodY = 0
+
+    let score = 0
+
+    const snake = [
+        { x: 200, y: 400 },
+        { x: 190, y: 400 },
+        { x: 180, y: 400 },
+        { x: 170, y: 400 },
+        { x: 160, y: 400 },
+    ]
+
+    function main() {
+        if (hitBorder()) return
+        setTimeout(() => {
+            clearCanvas()
+            drawFood()
+            move()
+            drawSnake()
+            main()
+        }, 100)
+
+
+    }
+
+    function drawSnake() {
+        snake.forEach(drawSnakePart)
+    }
+
+    function drawSnakePart(part) {
+        board_ctx.fillStyle = SNAKE_FILL_STYLE
+        board_ctx.strokeStyle = SNAKE_STROKE_STYLE
+        board_ctx.fillRect(part.x, part.y, 10, 10)
+        board_ctx.strokeRect(part.x, part.y, 10, 10)
+    }
+
+    function clearCanvas() {
+        board_ctx.fillStyle = 'white'
+        board_ctx.strokeStyle = 'white'
+        board_ctx.fillRect(0, 0, board.width, board.height)
+        board_ctx.strokeRect(0, 0, board.width, board.height)
+    }
+
+    function move() {
+        const head = {
+            x: snake[0].x + dx,
+            y: snake[0].y + dy
+        }
+
+        snake.unshift(head)
+
+        const eatenFood = snake[0].x === foodX && snake[0].y === foodY
+        if(eatenFood){
+            generateFood()
+            score += 10
+            document.getElementById('score').innerHTML = score
+            return
+        }
+
+        snake.pop()
+    }
+
+    function changeDirection(e) {
+        const upKey = 38
+        const downKey = 40
+        const leftKey = 37
+        const rightKey = 39
+
+        let isGoingRight = dx === 10
+        let isGoingLeft = dx === -10
+        let isGoingUp = dy === -10
+        let isGoingDown = dy === 10
+
+        let pressedKey = e
+
+        if (pressedKey === leftKey && !isGoingRight) {
+            dx = -10
+            dy = 0
+        }
+
+        if (pressedKey === rightKey && !isGoingLeft) {
+            dx = 10
+            dy = 0
+        }
+
+        if (pressedKey === downKey && !isGoingUp) {
+            dx = 0
+            dy = 10
+        }
+
+        if (pressedKey === upKey && !isGoingDown) {
+            dx = 0
+            dy = -10
+        }
+    }
+
+    function hitBorder() {
+        for (let i = 2; i < snake.length; i++) {
+            if (snake[0].x === snake[i].x && snake[0].y === snake[i].y)
+                return true
+        }
+
+        let leftWall = snake[0].x < 0
+        let rightWall = snake[0].x > board.width - 10
+        let upperWall = snake[0].y < 0
+        let bottomWall = snake[0].y > board.height - 10
+
+        console.log(leftWall || rightWall || upperWall || bottomWall)
+        return leftWall || rightWall || upperWall || bottomWall
+    }
+
+    function randomFood(min, max) {
+        return Math.round((Math.random() * (max - min) + min) / 10) * 10
+    }
+
+    function generateFood() {
+        foodX = randomFood(0, board.width - 10)
+        foodY = randomFood(0, board.height - 10)
+
+        snake.forEach(part => {
+            const hasEatenFood = part.x === foodX && part.y === foodY
+            if(hasEatenFood)
+                generateFood()
+        })
+
+    }
+
+    function drawFood() {
+        board_ctx.fillStyle = SNAKE_FILL_STYLE
+        board_ctx.strokeStyle = SNAKE_STROKE_STYLE
+        board_ctx.fillRect(foodX, foodY, 10, 10)
+        board_ctx.strokeRect(foodX, foodY, 10, 10)
+    }
+
+    main()
+    document.addEventListener("keydown", event => {
+        changeDirection(event.keyCode)
+    })
+</script>
+
+</html>
